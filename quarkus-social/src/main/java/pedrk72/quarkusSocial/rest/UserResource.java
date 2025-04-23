@@ -3,8 +3,10 @@ package pedrk72.quarkusSocial.rest;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import pedrk72.quarkusSocial.domain.model.User;
+import pedrk72.quarkusSocial.domain.repository.UserRepository;
 import pedrk72.quarkusSocial.rest.dto.CreateUserRequest;
 
+import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -12,6 +14,13 @@ import javax.ws.rs.core.Response;
 
 @Path("/users")
 public class UserResource  {
+
+    private UserRepository repository;
+
+    @Inject
+    public UserResource(UserRepository repository){
+        this.repository = repository;
+    }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON) //Which type of data the method will receive
@@ -21,13 +30,14 @@ public class UserResource  {
         User user = new User();
         user.setName(userRequest.getName());
         user.setAge(userRequest.getAge());
-        user.persist();
+
+        repository.persist(user);
         return Response.ok(user).build();
     }
 
     @GET
     public Response listAllUsers(){
-        PanacheQuery<PanacheEntityBase> query = User.findAll();
+        PanacheQuery<User> query = repository.findAll();
         return Response.ok(query.list()).build();
     }
 
@@ -35,10 +45,10 @@ public class UserResource  {
     @Transactional
     @Path("{id}")
     public Response deleteUser(@PathParam("id") Long id){
-        User byId = User.findById(id);
+        User byId = repository.findById(id);
 
         if (byId != null){
-            byId.delete();
+            repository.delete(byId);
             return Response.ok().build();
         }
 
@@ -49,7 +59,7 @@ public class UserResource  {
     @Transactional
     @Path("{id}")
     public Response updateUser(@PathParam("id") Long id, CreateUserRequest userData){
-        User byId = User.findById(id);
+        User byId = repository.findById(id);
 
         if (byId != null){
             byId.setName(userData.getName());

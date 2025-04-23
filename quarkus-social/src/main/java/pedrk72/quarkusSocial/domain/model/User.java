@@ -8,7 +8,7 @@ import java.util.Objects;
 
 @Entity //To indicate that is an entity of the database.
 @Table(name = "users") // To indicate the respective table name on DB.
-public class User extends PanacheEntityBase {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
