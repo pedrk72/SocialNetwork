@@ -16,10 +16,12 @@ import javax.ws.rs.core.Response;
 import java.util.Set;
 
 @Path("/users")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
 public class UserResource  {
 
-    private UserRepository repository;
-    private Validator validator;
+    private final UserRepository repository;
+    private final Validator validator;
 
     //Constructor to add dependencies
     @Inject
