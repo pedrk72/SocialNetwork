@@ -2,15 +2,12 @@ package pedrk72.quarkusSocial.rest;
 
 import pedrk72.quarkusSocial.domain.model.Follower;
 import pedrk72.quarkusSocial.domain.repository.FollowerRepository;
-import pedrk72.quarkusSocial.domain.repository.PostRepository;
 import pedrk72.quarkusSocial.domain.repository.UserRepository;
 import pedrk72.quarkusSocial.rest.dto.CreateFollowerRequest;
 
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.transaction.Transactional;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -29,6 +26,8 @@ public class FollowerResource {
         this.followerRepository = followerRepository;
     }
 
+    @Transactional
+    @PUT
     public Response followerUser(@PathParam("userId") Long userId, CreateFollowerRequest followerRequest){
         var user = userRepository.findById(userId);
         var follower = userRepository.findById(followerRequest.getFollowerId());
@@ -37,10 +36,15 @@ public class FollowerResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        Follower entity = new Follower();
-        entity.setUser(user);
-        entity.setFollower(follower);
-        followerRepository.persist(entity);
+        // To verify if the follower already follows the respective user
+        boolean isFollower = followerRepository.follows(follower, user);
+
+        if (!isFollower) {
+            Follower entity = new Follower();
+            entity.setUser(user);
+            entity.setFollower(follower);
+            this.followerRepository.persist(entity);
+        }
 
         return Response.status(Response.Status.NO_CONTENT).build();
     }
