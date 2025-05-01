@@ -32,6 +32,12 @@ public class FollowerResource {
         var user = userRepository.findById(userId);
         var follower = userRepository.findById(followerRequest.getFollowerId());
 
+        if (userId.equals(followerRequest.getFollowerId())){
+            return Response.status(Response.Status.CONFLICT)
+                    .entity("You can not follow yourself")
+                    .build();
+        }
+
         if (user == null){
             return Response.status(Response.Status.NOT_FOUND).build();
         }
