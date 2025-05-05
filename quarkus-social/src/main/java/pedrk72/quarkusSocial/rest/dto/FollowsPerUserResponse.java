@@ -1,7 +1,6 @@
 package pedrk72.quarkusSocial.rest.dto;
 
 import lombok.Data;
-import pedrk72.quarkusSocial.domain.model.Follower;
 
 import java.util.List;
 
