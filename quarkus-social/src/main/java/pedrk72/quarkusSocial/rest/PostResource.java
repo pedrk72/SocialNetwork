@@ -5,6 +5,7 @@ import io.quarkus.hibernate.orm.panache.PanacheQuery;
 
 import pedrk72.quarkusSocial.domain.model.Post;
 import pedrk72.quarkusSocial.domain.model.User;
+import pedrk72.quarkusSocial.domain.repository.FollowerRepository;
 import pedrk72.quarkusSocial.domain.repository.PostRepository;
 import pedrk72.quarkusSocial.domain.repository.UserRepository;
 import pedrk72.quarkusSocial.rest.dto.CreatePostRequest;
@@ -28,11 +29,13 @@ public class PostResource {
 
     private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final FollowerRepository followerRepository;
 
     @Inject
-    public PostResource(UserRepository userRepository, PostRepository postRepository){
+    public PostResource(UserRepository userRepository, PostRepository postRepository, FollowerRepository followerRepository){
         this.userRepository = userRepository;
         this.postRepository = postRepository;
+        this.followerRepository = followerRepository;
     }
 
     //@PathParam() used to set the parameter that comes in URL
@@ -55,12 +58,41 @@ public class PostResource {
     }
 
     @GET
-    public Response listPosts(@PathParam("userId") Long userId){
+    public Response listPosts(@PathParam("userId") Long userId,
+                              @HeaderParam("followerId") Long followerId){
         User byId = userRepository.findById(userId);
 
         if (byId == null){
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response
+                    .status(Response.Status.NOT_FOUND)
+                    .build();
         }
+
+        if (followerId == null){
+            return Response
+                    .status(Response.Status.BAD_REQUEST)
+                    .entity("You forgot to indicate the follower id")
+                    .build();
+        }
+
+        User follower = userRepository.findById(followerId);
+
+        if (follower == null){
+            return Response
+                    .status(Response.Status.BAD_REQUEST)
+                    .entity("The respective follower does not exist")
+                    .build();
+        }
+
+        boolean follows = followerRepository.follows(follower, byId);
+
+        if (!follows){
+            return Response
+                    .status(Response.Status.FORBIDDEN)
+                    .entity("You can not see these posts")
+                    .build();
+        }
+
 
         // Two ways of do the same thing
         PanacheQuery<Post> posts = postRepository.find("user", byId);
