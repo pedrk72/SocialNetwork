@@ -34,7 +34,7 @@ public class UserResource  {
     @Consumes(MediaType.APPLICATION_JSON) //Which type of data the method will receive
     @Produces(MediaType.APPLICATION_JSON) //Which type of data the method will return
     @Transactional
-    public Response createUser(CreateUserRequest userRequest){
+    public Response createUser(CreateUserRequest userRequest) {
 
         Set<ConstraintViolation<CreateUserRequest>> validate = validator.validate(userRequest);
 
@@ -46,7 +46,7 @@ public class UserResource  {
 //            return Response.status(400).entity(errorMessage).build();
 //        }
 
-        if (!validate.isEmpty()){
+        if (!validate.isEmpty()) {
             ResponseError responseError = ResponseError.createFromValidation(validate);
 
             return Response.status(400).entity(responseError).build();
@@ -59,7 +59,7 @@ public class UserResource  {
         repository.persist(user);
 
         //return Response.ok(user).build();
-        return  Response
+        return Response
                 .status(Response.Status.CREATED.getStatusCode())
                 .entity(user)
                 .build();
