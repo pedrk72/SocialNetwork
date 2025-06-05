@@ -4,10 +4,8 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import pedrk72.quarkusSocial.domain.model.Follower;
 import pedrk72.quarkusSocial.domain.model.User;
 import pedrk72.quarkusSocial.domain.repository.FollowerRepository;
 import pedrk72.quarkusSocial.domain.repository.UserRepository;
@@ -15,11 +13,15 @@ import pedrk72.quarkusSocial.rest.dto.CreateFollowerRequest;
 
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import javax.ws.rs.core.Response;
 
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
 @TestHTTPEndpoint(FollowerResource.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class FollowerResourceTest {
 
     @Inject
@@ -45,6 +47,11 @@ class FollowerResourceTest {
         user2.setAge(25);
         userRepository.persist(user2);
         user2Id = user2.getId();
+
+        var followerEntity = new Follower();
+        followerEntity.setFollower(user2);
+        followerEntity.setUser(user);
+        followerRepository.persist(followerEntity);
     }
 
     @Test
@@ -104,4 +111,39 @@ class FollowerResourceTest {
 
     }
 
+    @Test
+    @Order(4)
+    @DisplayName("Should not found the respective user")
+    public void listOfFollowersUserNotFoundTest(){
+        var userNotFound = 10;
+
+        given()
+                .contentType(ContentType.JSON)
+                .pathParam("userId", userNotFound)
+                .when()
+                .get()
+                .then()
+                .statusCode(404);
+    }
+
+    @Test
+    @Order(5)
+    @DisplayName("Should return a list of followers of the respective user")
+    public void listOfFollowersTest(){
+
+        var response = given()
+                .contentType(ContentType.JSON)
+                .pathParam("userId", userId)
+                .when()
+                .get()
+                .then()
+                .extract().response();
+
+        var followersCount = response.jsonPath().get("followersCount");
+        var followers = response.jsonPath().getList("followers");
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.statusCode());
+        assertEquals(followersCount, 1);
+        assertEquals(1, followers.size());
+    }
 }
