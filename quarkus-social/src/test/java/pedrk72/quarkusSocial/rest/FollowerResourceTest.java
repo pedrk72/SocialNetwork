@@ -17,7 +17,6 @@ import javax.ws.rs.core.Response;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
 @TestHTTPEndpoint(FollowerResource.class)
@@ -145,5 +144,42 @@ class FollowerResourceTest {
         assertEquals(Response.Status.OK.getStatusCode(), response.statusCode());
         assertEquals(followersCount, 1);
         assertEquals(1, followers.size());
+    }
+
+    @Test
+    @Order(6)
+    @DisplayName("Should return 404 (Not Found) when user id is equal to null")
+    public void unfollowerUserNotFoundTest(){
+        CreateFollowerRequest followerRequest = new CreateFollowerRequest();
+        followerRequest.setFollowerId(userId);
+
+        var nullUserId = 72;
+
+        given()
+                .contentType(ContentType.JSON)
+                .pathParam("userId", nullUserId)
+                .queryParam("follwerId", user2Id)
+                .when()
+                .delete()
+                .then()
+                .statusCode(404);
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("Should return 204 (No Content) when we get a unfollow")
+    public void unfollowerUserNotTest(){
+        CreateFollowerRequest followerRequest = new CreateFollowerRequest();
+        followerRequest.setFollowerId(userId);
+
+
+        given()
+                .contentType(ContentType.JSON)
+                .pathParam("userId", userId)
+                .queryParam("follwerId", user2Id)
+                .when()
+                .delete()
+                .then()
+                .statusCode(204);
     }
 }
